@@ -19,6 +19,7 @@
 #include <X11/Xutil.h>
 #include <X11/Xft/Xft.h>
 #include <fribidi.h>
+#include <X11/cursorfont.h>
 
 #include <cairo/cairo.h>
 #include <cairo/cairo-xlib.h>
@@ -103,6 +104,7 @@ static void reload(const Arg *arg);
 static void load(FILE *fp);
 static void advance(const Arg *arg);
 static void pdf();
+static void toggle_cursor(const Arg *arg);
 static void quit(const Arg *arg);
 static void resize(int width, int height);
 static void run(void);
@@ -577,6 +579,31 @@ pdf()
 	cairo_surface_destroy(pdf);
 	first.i = -(slidecount-1);
 	advance(&first);
+}
+
+void
+toggle_cursor(const Arg *arg)
+{
+	Cursor cursor;
+	XColor color;
+	Pixmap bitmapNoData;
+	char noData[] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+	static int cursor_visible = 1;
+
+	memset(&color, 0, sizeof(color));
+
+
+	if (cursor_visible) {
+		bitmapNoData = XCreateBitmapFromData(xw.dpy, xw.win, noData, 8, 8);
+		cursor = XCreatePixmapCursor(xw.dpy, bitmapNoData,
+					     bitmapNoData, &color, &color, 0, 0);
+		XFreePixmap(xw.dpy, bitmapNoData);
+	} else {
+		cursor = XCreateFontCursor(xw.dpy, XC_left_ptr);
+	}
+	XDefineCursor(xw.dpy, xw.win, cursor);
+	XFreeCursor(xw.dpy, cursor);
+	cursor_visible ^= 1;
 }
 
 void
